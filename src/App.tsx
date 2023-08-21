@@ -1,34 +1,55 @@
-import React, { ChangeEvent } from "react";
-import { useState, useEffect } from "react";
-import { Button } from "./components/Button";
+import { useState, useEffect, ChangeEvent } from "react";
 import styles from "./App.module.css";
 
-function App() {
-  const [counter, setCounter] = useState(0);
-  const [keyword, setKeyword] = useState("");
-  const onClick = () => setCounter((prev) => prev + 1);
-  const onChange = (event: ChangeEvent<HTMLInputElement>) =>
-    setKeyword(event.target.value);
-  const irunonlyonce = () => {
-    console.log("run only once");
+interface Coin {
+  name: string;
+  symbol: string;
+  id: string;
+  quotes: {
+    USD: {
+      price: string;
+    };
   };
-  useEffect(irunonlyonce, []);
+}
+
+function App() {
+  const [loading, setLoading] = useState(true);
+  const [coins, setCoins] = useState<Coin[]>([]);
+  const [amount, setAmount] = useState("");
+  const onChange = (event: ChangeEvent<HTMLInputElement>) =>
+    setAmount(event.target.value);
   useEffect(() => {
-      console.log("Searching for " + keyword);
-  }, [keyword]);
-  useEffect(() => {
-      console.log("Counter is " + counter);
-  }, [counter]);
+    fetch("https://api.coinpaprika.com/v1/tickers").then((response) =>
+      response.json().then((json) => setCoins(json))
+    );
+    setLoading(false);
+  }, []);
+
+  const bitcoinPrice = coins.find(coin => coin.symbol === 'BTC')?.quotes.USD.price
   return (
     <div>
-      <input
-        value={keyword}
-        onChange={onChange}
-        type="text"
-        placeholder="Search here..."
-      />
-      <h1>{counter}</h1>
-      <button onClick={onClick}>Click me</button>
+      <h1 className={styles.title}>The Coins!</h1>
+      {loading ? (
+        <strong>Loading...</strong>
+      ) : (
+        <div>
+          <input
+            onChange={onChange}
+            value={amount}
+            type="number"
+            placeholder="Enter dollars"
+          />
+          <strong>  Bitcoin value: {Number(amount) / Number(bitcoinPrice)}</strong>
+        </div>
+      )}
+      <ul>
+        {coins.map((coin: Coin) => (
+          <li key={coin.id}>
+            {coin.name} ({coin.symbol}) :{" "}
+            {Math.floor(Number(coin.quotes.USD.price))}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
