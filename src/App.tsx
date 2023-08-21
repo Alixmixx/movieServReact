@@ -1,53 +1,28 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import styles from "./App.module.css";
-
-interface Coin {
-  name: string;
-  symbol: string;
-  id: string;
-  quotes: {
-    USD: {
-      price: string;
-    };
-  };
-}
+import { Movie, MovieProps } from "./components/Movie"
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [coins, setCoins] = useState<Coin[]>([]);
-  const [amount, setAmount] = useState("");
-  const onChange = (event: ChangeEvent<HTMLInputElement>) =>
-    setAmount(event.target.value);
-  useEffect(() => {
-    fetch("https://api.coinpaprika.com/v1/tickers").then((response) =>
-      response.json().then((json) => setCoins(json))
+  const [movies, setMovies] = useState([]);
+  const getMovies = async () => {
+    const response = await fetch(
+      "https://yts.mx/api/v2/list_movies.json?minimum_rating=8.5"
     );
+    const json = await response.json();
+    setMovies(json.data.movies);
     setLoading(false);
+  };
+  useEffect(() => {
+    getMovies();
   }, []);
 
-  const bitcoinPrice = coins.find(coin => coin.symbol === 'BTC')?.quotes.USD.price
   return (
-    <div>
-      <h1 className={styles.title}>The Coins!</h1>
-      {loading ? (
-        <strong>Loading...</strong>
-      ) : (
-        <div>
-          <input
-            onChange={onChange}
-            value={amount}
-            type="number"
-            placeholder="Enter dollars"
-          />
-          <strong>  Bitcoin value: {Number(amount) / Number(bitcoinPrice)}</strong>
-        </div>
-      )}
+    <div>-
+      {loading ? <h1>Loading...</h1> : null}
       <ul>
-        {coins.map((coin: Coin) => (
-          <li key={coin.id}>
-            {coin.name} ({coin.symbol}) :{" "}
-            {Math.floor(Number(coin.quotes.USD.price))}
-          </li>
+        {movies.map((movie: MovieProps) => (
+          <Movie key={movie.id} movie={movie}/>
         ))}
       </ul>
     </div>
